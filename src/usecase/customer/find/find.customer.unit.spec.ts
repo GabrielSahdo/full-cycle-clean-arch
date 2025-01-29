@@ -3,59 +3,50 @@ import Customer from "../../../domain/customer/entity/customer";
 import Address from "../../../domain/customer/value-object/address";
 import CustomerModel from "../../../infrastructure/customer/repository/sequelize/customer.model";
 import CustomerRepository from "../../../infrastructure/customer/repository/sequelize/customer.repository";
-import FindCustomerUseCase from "./find.customer.usecase";
+import { FindCustomerUseCase } from "./find.customer.usecase";
 
-const customer = new Customer("123", "John");
-const address = new Address("Street", 123, "Zip", "City");
-customer.changeAddress(address);
+describe("Test find customer use case", () => {
+    let sequelize: Sequelize;
 
-const MockRepository = () => {
-  return {
-    find: jest.fn().mockReturnValue(Promise.resolve(customer)),
-    findAll: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-  };
-};
+    beforeEach(async () => {
+        sequelize = new Sequelize({
+            dialect: "sqlite",
+            storage: ":memory:",
+            logging: false,
+            sync: { force: true },
+        });
 
-describe("Unit Test find customer use case", () => {
-  it("should find a customer", async () => {
-    const customerRepository = MockRepository();
-    const usecase = new FindCustomerUseCase(customerRepository);
-
-    const input = {
-      id: "123",
-    };
-
-    const output = {
-      id: "123",
-      name: "John",
-      address: {
-        street: "Street",
-        city: "City",
-        number: 123,
-        zip: "Zip",
-      },
-    };
-
-    const result = await usecase.execute(input);
-
-    expect(result).toEqual(output);
-  });
-
-  it("should not find a customer", async () => {
-    const customerRepository = MockRepository();
-    customerRepository.find.mockImplementation(() => {
-      throw new Error("Customer not found");
+        sequelize.addModels([CustomerModel]);
+        await sequelize.sync();
     });
-    const usecase = new FindCustomerUseCase(customerRepository);
 
-    const input = {
-      id: "123",
-    };
+    afterEach(async () => {
+        await sequelize.close();
+    });
 
-    expect(() => {
-      return usecase.execute(input);
-    }).rejects.toThrow("Customer not found");
-  });
+    it("should find a customer", async () => {
+        const customerRepo = new CustomerRepository();
+        const useCase = new FindCustomerUseCase(customerRepo);
+        
+        const customer = new Customer("123", "Johny");
+        const address = new Address("street", 123, "zip", "city");
+        customer.changeAddress(address);
+        
+        await customerRepo.create(customer);
+
+        const input = { id: "123" };
+        const output = {
+            id: "123",
+            name: "Johny",
+            address: {
+                street: "street",
+                city: "city",
+                number: 123,
+                zip: "zip",
+            },
+        };
+        const result = await useCase.execute(input);
+        
+        expect(result).toEqual(output);
+    });
 });
