@@ -1,3 +1,4 @@
+import Product from "../../../domain/product/entity/product";
 import {
     InputCreateProductDto,
     OutputCreateProductDto,
@@ -34,7 +35,7 @@ describe("Unit test for Create Product UseCase", () => {
     it("should create a product of type A", async () => {
         repository.findByName.mockResolvedValue(null);
         repository.create.mockResolvedValue(null);
-        
+
         const useCase = new CreateProductUseCase(repository);
         const output = await useCase.execute(inputTypeA);
 
@@ -46,11 +47,11 @@ describe("Unit test for Create Product UseCase", () => {
 
         expect(output).toEqual(expectedOutput);
     });
-    
+
     it("should create a product of type B", async () => {
         repository.findByName.mockResolvedValue(null);
         repository.create.mockResolvedValue(null);
-        
+
         const useCase = new CreateProductUseCase(repository);
         const output = await useCase.execute(inputTypeB);
 
@@ -61,5 +62,16 @@ describe("Unit test for Create Product UseCase", () => {
         };
 
         expect(output).toEqual(expectedOutput);
+    });
+
+    it("should throw an error when product name already exists", async () => {
+        repository.findByName.mockResolvedValue(
+            new Product("123", "Product A", 10),
+        );
+
+        const useCase = new CreateProductUseCase(repository);
+        await expect(useCase.execute(inputTypeA)).rejects.toThrow(
+            "Product already exists",
+        );
     });
 });

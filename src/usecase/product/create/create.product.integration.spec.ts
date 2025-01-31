@@ -56,7 +56,7 @@ describe("Unit test for Create Product UseCase", () => {
             name: expectedProduct.name,
             price: expectedProduct.price,
         };
-        
+
         const output = await useCase.execute(inputTypeA);
         expect(output).toEqual(expectedOutput);
     });
@@ -75,9 +75,20 @@ describe("Unit test for Create Product UseCase", () => {
             name: expectedProduct.name,
             price: expectedProduct.price,
         };
-        
+
         const output = await useCase.execute(inputTypeB);
 
         expect(output).toEqual(expectedOutput);
+    });
+
+    it("should throw an error when product name already exists", async () => {
+        const repository = new ProductRepository();
+        const useCase = new CreateProductUseCase(repository);
+
+        await repository.create(new Product("123", inputTypeA.name, 10));
+
+        await expect(useCase.execute(inputTypeA)).rejects.toThrow(
+            "Product already exists",
+        );
     });
 });

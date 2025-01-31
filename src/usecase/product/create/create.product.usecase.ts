@@ -1,4 +1,3 @@
-import ProductB from "../../../domain/product/entity/product-b";
 import ProductFactory from "../../../domain/product/factory/product.factory";
 import ProductRepositoryInterface from "../../../domain/product/repository/product-repository.interface";
 import {
