@@ -1,38 +1,24 @@
-import { Sequelize } from "sequelize-typescript";
 import Customer from "../../../domain/customer/entity/customer";
 import Address from "../../../domain/customer/value-object/address";
-import CustomerModel from "../../../infrastructure/customer/repository/sequelize/customer.model";
-import CustomerRepository from "../../../infrastructure/customer/repository/sequelize/customer.repository";
 import { FindCustomerUseCase } from "./find.customer.usecase";
 
+const MockRepository = () => {
+    const customer = new Customer("123", "Johny");
+    const address = new Address("street", 123, "zip", "city");
+    customer.changeAddress(address);
+
+    return {
+        find: jest.fn().mockResolvedValue(customer),
+        findAll: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+    };
+};
+
 describe("Test find customer use case", () => {
-    let sequelize: Sequelize;
-
-    beforeEach(async () => {
-        sequelize = new Sequelize({
-            dialect: "sqlite",
-            storage: ":memory:",
-            logging: false,
-            sync: { force: true },
-        });
-
-        sequelize.addModels([CustomerModel]);
-        await sequelize.sync();
-    });
-
-    afterEach(async () => {
-        await sequelize.close();
-    });
-
     it("should find a customer", async () => {
-        const customerRepo = new CustomerRepository();
-        const useCase = new FindCustomerUseCase(customerRepo);
-        
-        const customer = new Customer("123", "Johny");
-        const address = new Address("street", 123, "zip", "city");
-        customer.changeAddress(address);
-        
-        await customerRepo.create(customer);
+        const repo = MockRepository();
+        const useCase = new FindCustomerUseCase(repo);
 
         const input = { id: "123" };
         const output = {
@@ -46,7 +32,18 @@ describe("Test find customer use case", () => {
             },
         };
         const result = await useCase.execute(input);
-        
+
         expect(result).toEqual(output);
+    });
+    
+    it("should throw if a customer is not found", async () => {
+        const repo = MockRepository();
+        repo.find.mockRejectedValue(new Error("Customer not found"));
+        
+        const useCase = new FindCustomerUseCase(repo);
+        const input = { id: "123" };
+        
+        await expect(useCase.execute(input)).rejects.toThrow("Customer not found");
+        
     });
 });
