@@ -2,7 +2,7 @@ import Product from "../../../domain/product/entity/product";
 import { InputFindProductDto, OutputFindProductDto } from "./find.product.dto";
 import FindProductUseCase from "./find.product.usecase";
 
-describe("Fint Product use case unit test", () => {
+describe("Find Product use case unit test", () => {
     let repo: jest.Mocked<any>;
 
     beforeEach(() => {
